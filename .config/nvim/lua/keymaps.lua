@@ -25,10 +25,6 @@ map("i", "<C-c>", "<Esc>:w<CR>", opts)
 -- Switch to alternate buffer
 map("n", "<C-e>", "<C-^>", opts)
 
--- Cycle through buffers
-map("n", "<Tab>", ":bnext<CR>", opts)
-map("n", "<S-Tab>", ":bprev<CR>", opts)
-
 -- Visual line
 map("n", "<leader>v", "V", opts)
 

@@ -83,7 +83,7 @@ opt.conceallevel = 0
 opt.timeoutlen = 500
 
 -- Use terminal colors from iTerm2 instead of GUI colors
-opt.termguicolors = true
+opt.termguicolors = false
 
 -- Background
 opt.background = "dark"
