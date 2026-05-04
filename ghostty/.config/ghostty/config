@@ -1,3 +1,12 @@
+theme = Monokai Classic
+font-family = "SF Mono Terminal"
+background-opacity = 0.8
+background-blur = 20
+
+window-width = 88
+window-height = 24
+
 keybind = cmd+shift+backslash=new_split:right
 keybind = cmd+shift+minus=new_split:down
-background-opacity = 0.9
+
+bold-is-bright = true
