@@ -1,4 +1,59 @@
 -- Editor plugins
+
+-- A "scratch" buffer here means the placeholder shown when nothing is open:
+-- listed, unnamed, empty and unmodified.
+local function is_scratch(b)
+  return vim.api.nvim_buf_is_valid(b)
+    and vim.bo[b].buflisted
+    and vim.api.nvim_buf_get_name(b) == ""
+    and not vim.bo[b].modified
+    and vim.api.nvim_buf_line_count(b) == 1
+    and vim.api.nvim_buf_get_lines(b, 0, 1, false)[1] == ""
+end
+
+-- Reuse an existing scratch buffer if one exists, else make a fresh one.
+-- Avoids piling up duplicate [No Name] buffers each time the last file closes.
+local function scratch_buf()
+  for _, bi in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    if is_scratch(bi.bufnr) then
+      return bi.bufnr
+    end
+  end
+  return vim.api.nvim_create_buf(true, false)
+end
+
+-- What to show when a window is left with nothing: the most recently used file
+-- buffer if any are still open, otherwise the placeholder.
+local function fallback_buf()
+  local best
+  for _, bi in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    if bi.name ~= "" and (not best or bi.lastused > best.lastused) then
+      best = bi
+    end
+  end
+  return best and best.bufnr or scratch_buf()
+end
+
+-- Discard the placeholder once a real file is open: it should only ever be
+-- visible when there are no file buffers left.
+local function sweep_scratch()
+  local has_file, scratches = false, {}
+  for _, bi in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    if bi.name ~= "" then
+      has_file = true
+    elseif is_scratch(bi.bufnr) and #vim.fn.win_findbuf(bi.bufnr) == 0 then
+      -- not displayed anywhere, so deleting it can't disturb the layout
+      table.insert(scratches, bi.bufnr)
+    end
+  end
+  if not has_file then
+    return
+  end
+  for _, b in ipairs(scratches) do
+    pcall(vim.api.nvim_buf_delete, b, {})
+  end
+end
+
 return {
   -- Surround
   {
@@ -147,13 +202,29 @@ return {
       end, { silent = true })
 
 
-      -- Auto-close NvimTree if it's the last window
+      -- Once a real file is open, drop the leftover placeholder buffer
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+        callback = function()
+          vim.schedule(sweep_scratch)
+        end,
+      })
+
+      -- If NvimTree is the last window, open an empty buffer beside it
+      -- instead of quitting (matches a bare `nvim` with no file argument)
       vim.api.nvim_create_autocmd("BufEnter", {
         nested = true,
         callback = function()
           local tree = require("nvim-tree.api").tree
           if #vim.api.nvim_list_wins() == 1 and tree.is_tree_buf() then
-            vim.cmd("quit")
+            -- deferred: we may be mid-window-close, where splitting errors (E242)
+            vim.schedule(function()
+              if #vim.api.nvim_list_wins() ~= 1 or not tree.is_tree_buf() then
+                return
+              end
+              vim.cmd("noautocmd botright vsplit")
+              vim.api.nvim_win_set_buf(0, fallback_buf())
+              tree.resize()
+            end)
           end
         end,
       })
@@ -281,7 +352,13 @@ return {
       -- close buffer
       local function close_buffer()
         if #vim.fn.getbufinfo({ buflisted = 1 }) <= 1 then
-          vim.cmd('quit')
+          -- last file: leave an empty buffer in its place
+          local cur = vim.api.nvim_get_current_buf()
+          local scratch = scratch_buf()
+          if scratch ~= cur then
+            vim.api.nvim_win_set_buf(0, scratch)
+            vim.cmd('bdelete ' .. cur)
+          end
         else
           vim.cmd('BufferLineCyclePrev')
           vim.cmd('bdelete #')
