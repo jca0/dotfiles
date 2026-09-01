@@ -1,0 +1,32 @@
+# Terminator config -- Linux counterpart to ghostty/.config/ghostty/config
+#
+# Split keybinds mirror the ghostty ones, with cmd -> ctrl:
+#   ghostty: cmd+shift+backslash = new_split:right  ->  split_vert
+#   ghostty: cmd+shift+minus     = new_split:down   ->  split_horiz
+#
+# Two things that look wrong but are not:
+#  1. Terminator matches the keyval *after* shift is applied and treats shift
+#     as consumed, so Ctrl+Shift+\ must be written <Control>bar and Ctrl+Shift+-
+#     must be <Control>underscore. Writing <Shift><Control>backslash silently
+#     never fires. (Terminator's own default zoom_in = <Control>plus, same idea.)
+#  2. split_vert builds an HPaned (side-by-side) and split_horiz builds a
+#     VPaned (stacked) -- the names read backwards.
+#
+# Overriding these drops terminator's <Shift><Control>e / <Shift><Control>o
+# split defaults. Note terminator rewrites this file when you save from the
+# GUI preferences dialog, which strips these comments.
+[global_config]
+[keybindings]
+  split_horiz = <Control>underscore
+  split_vert = <Control>bar
+[profiles]
+  [[default]]
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+[plugins]
