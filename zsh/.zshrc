@@ -4,6 +4,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # aliases
 alias clauded='claude --dangerously-skip-permissions'
+alias codey='codex --yolo'
 
 eval "$(zoxide init zsh)"
 
