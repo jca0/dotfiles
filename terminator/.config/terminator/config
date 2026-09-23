@@ -15,12 +15,20 @@
 # Overriding these drops terminator's <Shift><Control>e / <Shift><Control>o
 # split defaults. Note terminator rewrites this file when you save from the
 # GUI preferences dialog, which strips these comments.
+#
+# Also: ctrl+shift+n opens a new window (instead of terminator's default
+# go_next, which is unbound -- ctrl+tab still cycles panes), and the font is
+# pinned two zoom steps below the system mono font (Ubuntu Sans Mono 13 -> 11).
 [global_config]
 [keybindings]
   split_horiz = <Control>underscore
   split_vert = <Control>bar
+  new_window = <Shift><Control>n
+  go_next = ""
 [profiles]
   [[default]]
+    use_system_font = False
+    font = Ubuntu Sans Mono 11
 [layouts]
   [[default]]
     [[[window0]]]
